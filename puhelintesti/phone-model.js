@@ -1,3 +1,4 @@
+import {validateTrips,tripSignature} from './trip-model.js?v=5';
 import {validateItem} from './storage.js';
 export const groups=['Paidat','Neuletakit ja puserot','Jakut','Takit','Housut','Mekot ja hameet','Urheiluvaatteet','Sukat ja sukkahousut','Alusvaatteet','Yö- ja kylpyvaatteet','Huivit','Asusteet','Juhla-asut','Kengät'];
 export const sportsTypes=['Jumppahousut','Jumppatoppi','Kerrastohousut','Kerrastopaita','Partiopaita','Pyöräilyhousut','Sadehousut','Sadetakki','Toppahame','Toppashortsit','Ulkoiluhousut','Ulkoilutakki','Urheiluliivi','Verryttelyasu'];
@@ -72,9 +73,11 @@ export function matches(item,{query='',group='',category='',archive=false}={}){
 export function recordSignature(items){return JSON.stringify(items.map(i=>[i.id,i.revision,i.updatedAt]).sort((a,b)=>a[0].localeCompare(b[0])));}
 export function readSnapshot(text){
  const data=JSON.parse(text);
- if(data?.format!=='oma-vaatekaappi' || ![3,4].includes(data.version) || typeof data.collectionId!=='string' || !data.collectionId || !Array.isArray(data.items) || data.items.length>2000)throw Error('Tarvitaan tämän puhelinversion varmuuskopio (versio 3 tai 4). Vanha kokoelma valmistellaan ensin erillisenä kopiona.');
- if(data.version===4&&!data.settings)throw Error('Varmuuskopiosta puuttuvat asetukset.');
+ if(data?.format!=='oma-vaatekaappi' || ![3,4,5].includes(data.version) || typeof data.collectionId!=='string' || !data.collectionId || !Array.isArray(data.items) || data.items.length>2000)throw Error('Tarvitaan tämän puhelinversion varmuuskopio (versio 3, 4 tai 5). Vanha kokoelma valmistellaan ensin erillisenä kopiona.');
+ if(data.version>=4&&!data.settings)throw Error('Varmuuskopiosta puuttuvat asetukset.');
  if(data.settings!==undefined)validateSettings(data.settings);
+ if(data.version===5&&!Array.isArray(data.trips))throw Error('Varmuuskopiosta puuttuvat matkat.');
+ if(data.trips!==undefined)validateTrips(data.trips);
  const items=data.items.map(validateRecord),keys=items.map(i=>i.id);
  if(new Set(keys).size!==keys.length)throw Error('Varmuuskopiossa on päällekkäisiä tunnisteita.');
  for(const key of ['excel','user']){
@@ -95,7 +98,7 @@ export function selections(item,key){
 function validList(values){return Array.isArray(values)&&values.length<=200&&new Set(values).size===values.length&&values.every(v=>typeof v==='string'&&v.trim()&&v.length<=200);}
 export function defaultSettings(items=[]){return {version:1,revision:0,storageLocations:[...new Set(['Vaatekaappi','Vaatehuone','Varasto',...items.map(i=>i.storage).filter(Boolean)])],purposes:[...new Set(['Siisti arki','Vapaa-aika','Työ','Juhla','Ulkoilu',...items.flatMap(i=>selections(i,'purposes'))])]};}
 export function validateSettings(settings){if(!settings||settings.version!==1||!Number.isInteger(settings.revision)||settings.revision<0||!validList(settings.storageLocations)||!validList(settings.purposes))throw Error('Valintalistojen asetukset ovat virheellisiä.');return {version:1,revision:settings.revision,storageLocations:[...settings.storageLocations],purposes:[...settings.purposes]};}
-export function collectionSignature(items,settings){return JSON.stringify([recordSignature(items),settings??defaultSettings(items)]);}
+export function collectionSignature(items,settings,trips=[]){return JSON.stringify([recordSignature(items),settings??defaultSettings(items),tripSignature(trips)]);}
 
 export const purchaseHeaders={purchaseYear:['Ostovuosi'],purchaseDate:['Ostopäivä','Ostopäivämäärä']};
 export function purchaseValue(item,key){const f=sourceFields(item).find(f=>purchaseHeaders[key].includes(f.header));return f?String(f.value??''):String(item[key]??'');}
