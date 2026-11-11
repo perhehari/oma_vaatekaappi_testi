@@ -50,3 +50,16 @@ legend{font-weight:600;font-size:.9rem}
 @media(max-height:500px){.browse-tools{position:static}}
 #phone-editor select{min-width:0;max-width:100%}
 #phone-editor .fields>label{min-width:0}
+
+/* Matkat ja pakkauslista. */
+body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;gap:8px;justify-content:center;background:#faf9f5;border-top:1px solid #c9cfc3;padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.bottom-nav button{flex:1;max-width:300px}
+.trip-heading{display:flex;gap:12px;align-items:end}.trip-heading>label{flex:1;min-width:0}.trip-heading button{padding:12px}
+.trip-buttons{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.trip-buttons button{padding:10px 12px}
+.packing-row{display:flex;gap:12px;background:white;border:1px solid #e0e3da;border-radius:10px;padding:12px;margin:10px 0;overflow-wrap:anywhere}
+.packing-row>img{width:64px;height:80px;object-fit:contain;flex:none}.packing-info{flex:1;min-width:0}.packing-info p{margin:5px 0;font-size:.8rem}
+.packed-control{display:flex;align-items:center;gap:8px;margin:10px 0}.packed-control input,.trip-choice input{width:22px;height:22px;min-height:22px;flex:none;margin:0}
+.small-button{padding:6px 10px;font-size:.8rem}.trip-choice{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #d8dece;overflow-wrap:anywhere}.trip-choice img{width:48px;height:60px;object-fit:contain;flex:none}.trip-choice span{min-width:0}
+.trip-picker-controls{position:sticky;top:0;background:#faf9f5;padding:8px 0;z-index:1}.trip-choices{margin:12px 0}#trip-add-confirm{position:sticky;bottom:0;width:100%;margin-top:16px}#trip-add-error,#trip-form-error{color:#9c4337}#trip-form label,#trip-add-body>label{margin-top:14px}#trip-picker{min-width:0;max-width:100%}
+@media(max-width:360px){.trip-heading{align-items:stretch;flex-direction:column}.trip-buttons button{flex:1}}
