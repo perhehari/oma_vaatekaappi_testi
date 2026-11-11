@@ -6,7 +6,7 @@ export const lockedHeaders=['ID','Kuva-ID','Kuva-ID / tiedostonimi'];
 export const detailHeaders=['Koko','Malli / leikkaus','Kuosi','Materiaali','Pesulämpötila','Rumpukuivaus','Silitys','Erityishoito / pesuohje','Pesuohjeen lähde','Ostopaikka','Ostopäivä','Ostovuosi','Hankintahinta (€)','Käyttötarkoitus','Vuodenaika(t)'];
 export function sourceFields(item){return item.inventory?.fields??item.extraFields??[];}
 const aliases={brand:['Merkki'],name:['Tunnistenimi'],category:['Alaryhmä / tyyppi','Alaryhmä/tyyppi'],color:['Pääväri'],material:['Materiaali'],condition:['Kunto'],state:['Tila'],storage:['Säilytyspaikka'],notes:['Huomiot']};
-const limits={brand:500,name:100,category:200,group:200,color:200,material:1000,condition:200,state:200,storage:500,notes:1000};
+const limits={purchaseYear:200,purchaseDate:200,brand:500,name:100,category:200,group:200,color:200,material:1000,condition:200,state:200,storage:500,notes:1000};
 const scalar=v=>v===null?'':String(v);
 export function fieldValue(item,key){
  const field=sourceFields(item).find(f=>aliases[key]?.includes(f.header));
@@ -22,7 +22,7 @@ export function fromLegacy(raw,now=new Date().toISOString()){
 export function validateRecord(item){
  if(item?.extraFields!==undefined && (!Array.isArray(item.extraFields)||item.extraFields.length>100||item.extraFields.some((f,i)=>f.column!==i+1||typeof f.header!=='string'||lockedHeaders.includes(f.header)||!(f.value===null||['string','number','boolean'].includes(typeof f.value))||String(f.value??'').length>10000)))throw Error('Lisätiedot ovat virheellisiä.');
  if(!item || !['photo','placeholder'].includes(item.photoKind) || item.phoneSchema!==1 || !Number.isInteger(item.revision) || item.revision<1 || typeof item.updatedAt!=='string' || !Number.isFinite(Date.parse(item.updatedAt)))throw Error('Vaatteen muutosseuranta on virheellinen.');
- for(const [key,max] of Object.entries(limits))if(!(key==='brand'&&item[key]===undefined) && (typeof item[key]!=='string' || item[key].length>max))throw Error(`Vaatteen kenttä on virheellinen: ${key}`);
+ for(const [key,max] of Object.entries(limits))if(!(['brand','purchaseYear','purchaseDate'].includes(key)&&item[key]===undefined) && (typeof item[key]!=='string' || item[key].length>max))throw Error(`Vaatteen kenttä on virheellinen: ${key}`);
  // Hyödynnä yhteistä kuva- ja lähdetunnistevalidointia; puhelimen nykyarvot sallivat Excelin tarkat värit ja materiaalit.
  for(const key of ['purposes','seasons'])if(item[key]!==undefined&&!validList(item[key]))throw Error('Monivalinta on virheellinen.');
  validateItem({...item,category:'Muu',color:'Ei määritelty',material:'Ei tiedossa',condition:'Ei arvioitu'});
@@ -32,6 +32,13 @@ export function validateRecord(item){
 export function editRecord(before,patch,now=new Date().toISOString(),fieldChanges=[]){
  validateRecord(before);const next=structuredClone(before);let changed=false;
  for(const [key,value] of Object.entries(patch)){
+  if(Object.hasOwn(purchaseHeaders,key)){
+   if(typeof value!=='string'||value.length>200)throw Error('Ostotieto on virheellinen.');
+   if(purchaseValue(next,key)===value)continue;
+   next[key]=value;changed=true;
+   for(const field of sourceFields(next))if(purchaseHeaders[key].includes(field.header))field.value=key==='purchaseYear'&&(typeof field.value==='number'||typeof next.inventory?.originalCells.find(f=>f.column===field.column)?.value==='number')?(value===''?null:Number(value)):value;
+   continue;
+  }
   if(Object.hasOwn(selectionHeaders,key)){
    if(!validList(value))throw Error('Monivalinta on virheellinen.');
    if(JSON.stringify(next[key])===JSON.stringify(value))continue;
@@ -51,6 +58,7 @@ export function editRecord(before,patch,now=new Date().toISOString(),fieldChange
   if(field.value!==value){field.value=value;changed=true;}
  }
  for(const key of Object.keys(aliases))if(sourceFields(next).some(f=>aliases[key].includes(f.header)))next[key]=fieldValue(next,key);
+ if(Object.keys(patch).some(k=>Object.hasOwn(purchaseHeaders,k)))validatePurchase(purchaseValue(next,'purchaseYear'),purchaseValue(next,'purchaseDate'));
  if(!changed)return next;
  if(next.state==='Poistettu' && before.state!=='Poistettu')next.previousState=before.state;
  next.revision++;next.updatedAt=now;return validateRecord(next);
@@ -58,7 +66,7 @@ export function editRecord(before,patch,now=new Date().toISOString(),fieldChange
 export function restoreArchived(item,now){return editRecord(item,{state:item.previousState && item.previousState!=='Poistettu'?item.previousState:'Käytössä'},now);}
 export function matches(item,{query='',group='',category='',archive=false}={}){
  if((item.state==='Poistettu')!==archive || group && item.group!==group || category && item.category!==category)return false;
- const text=[item.name,item.group,item.category,item.color,item.material,item.condition,item.state,item.storage,item.notes,item.inventory?.locked.excelId,item.brand,...(item.purposes??[]),...(item.seasons??[]),...sourceFields(item).map(f=>scalar(f.value))].join(' ').toLocaleLowerCase('fi');
+ const text=[item.name,item.group,item.category,item.color,item.material,item.condition,item.state,item.storage,item.notes,item.inventory?.locked.excelId,item.brand,item.purchaseYear,item.purchaseDate,...(item.purposes??[]),...(item.seasons??[]),...sourceFields(item).map(f=>scalar(f.value))].join(' ').toLocaleLowerCase('fi');
  return text.includes(query.toLocaleLowerCase('fi'));
 }
 export function recordSignature(items){return JSON.stringify(items.map(i=>[i.id,i.revision,i.updatedAt]).sort((a,b)=>a[0].localeCompare(b[0])));}
@@ -88,3 +96,8 @@ function validList(values){return Array.isArray(values)&&values.length<=200&&new
 export function defaultSettings(items=[]){return {version:1,revision:0,storageLocations:[...new Set(['Vaatekaappi','Vaatehuone','Varasto',...items.map(i=>i.storage).filter(Boolean)])],purposes:[...new Set(['Siisti arki','Vapaa-aika','Työ','Juhla','Ulkoilu',...items.flatMap(i=>selections(i,'purposes'))])]};}
 export function validateSettings(settings){if(!settings||settings.version!==1||!Number.isInteger(settings.revision)||settings.revision<0||!validList(settings.storageLocations)||!validList(settings.purposes))throw Error('Valintalistojen asetukset ovat virheellisiä.');return {version:1,revision:settings.revision,storageLocations:[...settings.storageLocations],purposes:[...settings.purposes]};}
 export function collectionSignature(items,settings){return JSON.stringify([recordSignature(items),settings??defaultSettings(items)]);}
+
+export const purchaseHeaders={purchaseYear:['Ostovuosi'],purchaseDate:['Ostopäivä','Ostopäivämäärä']};
+export function purchaseValue(item,key){const f=sourceFields(item).find(f=>purchaseHeaders[key].includes(f.header));return f?String(f.value??''):String(item[key]??'');}
+export function dateInputValue(value){const s=String(value??'');const match=/^(\d{4}-\d{2}-\d{2})(?:T.*)?$/.exec(s);if(!match)return '';const date=new Date(match[1]+'T12:00:00Z');return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===match[1]?match[1]:'';}
+export function validatePurchase(year,date){if(date){const iso=dateInputValue(date);if(!iso)throw Error('Valitse kelvollinen ostopäivämäärä tai tyhjennä päivä.');if(year!==iso.slice(0,4))throw Error('Ostovuoden pitää vastata ostopäivämäärän vuotta. Korjaa vuosi tai päivämäärä.');}}
