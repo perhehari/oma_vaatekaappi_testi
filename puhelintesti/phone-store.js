@@ -1,4 +1,4 @@
-import {validateRecord,readSnapshot,collectionSignature,defaultSettings,validateSettings} from './phone-model.js?v=3';
+import {validateRecord,readSnapshot,collectionSignature,defaultSettings,validateSettings} from './phone-model.js?v=4';
 export const testDatabase='oma-vaatekaappi-puhelin-testi-v1';
 export function openPhoneStore(name=testDatabase){return new Promise((resolve,reject)=>{const request=indexedDB.open(name,1);request.onupgradeneeded=()=>{request.result.createObjectStore('items',{keyPath:'id'});request.result.createObjectStore('meta');};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);request.onblocked=()=>reject(Error('Sulje sovelluksen muut välilehdet.'));});}
 export function readCollection(db){return new Promise((resolve,reject)=>{const tx=db.transaction(['items','meta'],'readonly');const items=tx.objectStore('items').getAll(),id=tx.objectStore('meta').get('collectionId'),settings=tx.objectStore('meta').get('settings');tx.oncomplete=()=>resolve({items:items.result,collectionId:id.result??null,settings:settings.result??null});tx.onerror=()=>reject(tx.error);});}
