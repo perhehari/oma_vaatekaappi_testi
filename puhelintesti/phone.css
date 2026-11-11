@@ -17,3 +17,36 @@
 #visible-count{scroll-margin-top:350px}
 #backup-panel{margin:0 0 16px}
 @media(max-width:600px){.browse-tools .toolbar{flex-direction:row;align-items:center;flex-wrap:wrap}.browse-tools .toolbar h2{margin:0}.browse-actions{width:100%}.browse-tools .toolbar button{width:auto;flex:1;padding:10px}.browse-tools .tabs{margin-top:10px}.browse-tools .filters{grid-template-columns:1fr 1fr;gap:8px}.browse-tools .filters>label:first-child{grid-column:1/-1}.browse-tools input,.browse-tools select{padding:8px}.browse-tools #group-shortcuts button{padding:8px 12px}}
+
+/* Tiivis vaatekaappi: asetukset ja varmuuskopiointi avautuvat erikseen. */
+.compact-main{padding-top:8px}
+.compact-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.compact-title h1{font:600 1.25rem system-ui,sans-serif;margin:0}
+.compact-title small{margin:0}
+.compact-title>button{margin-left:auto;padding:8px 10px}
+.compact-controls{display:flex;align-items:end;gap:8px}
+.compact-controls>label{flex:1;min-width:0}
+.compact-controls select{margin:0;padding:10px}
+.compact-controls>button{padding:10px 12px}
+.browse-tools{padding:8px 0}
+#search-panel{display:grid;grid-template-columns:2fr 1fr;gap:10px;padding-top:12px}
+#search-scope{grid-column:1/-1}
+#visible-count{font-size:.8rem;margin:10px 0;scroll-margin-top:140px}
+#message{font-size:.85rem}
+#message:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.settings-links{display:grid;gap:10px;margin:18px 0}
+#settings-form label{margin:16px 0}
+#settings-error{color:#9c4337}
+fieldset{min-width:0;margin:16px 0;padding:12px;border:1px solid #c9cfc3;border-radius:8px}
+legend{font-weight:600;font-size:.9rem}
+.choice-list{display:flex;flex-wrap:wrap;gap:8px}
+.choice-list button{padding:8px 12px;overflow-wrap:anywhere;max-width:100%}
+.choice-list [aria-pressed=true]{background:#344d43;color:#faf9f5}
+#backup-dialog{width:min(96%,620px)}
+#backup-panel{padding:0;background:transparent}
+#active{margin-top:8px}
+@media(max-width:360px){.compact-title{flex-wrap:wrap}.compact-title h1{font-size:1.1rem}.compact-title small{font-size:.75rem}.compact-title>button{font-size:.8rem}.compact-controls{gap:6px}.compact-controls>button{padding:10px 8px}}
+@media(max-height:500px){.browse-tools{position:static}}
+#phone-editor select{min-width:0;max-width:100%}
+#phone-editor .fields>label{min-width:0}
