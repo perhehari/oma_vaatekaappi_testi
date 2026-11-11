@@ -24,6 +24,7 @@ export function validateRecord(item){
  if(!item || !['photo','placeholder'].includes(item.photoKind) || item.phoneSchema!==1 || !Number.isInteger(item.revision) || item.revision<1 || typeof item.updatedAt!=='string' || !Number.isFinite(Date.parse(item.updatedAt)))throw Error('Vaatteen muutosseuranta on virheellinen.');
  for(const [key,max] of Object.entries(limits))if(!(key==='brand'&&item[key]===undefined) && (typeof item[key]!=='string' || item[key].length>max))throw Error(`Vaatteen kenttä on virheellinen: ${key}`);
  // Hyödynnä yhteistä kuva- ja lähdetunnistevalidointia; puhelimen nykyarvot sallivat Excelin tarkat värit ja materiaalit.
+ for(const key of ['purposes','seasons'])if(item[key]!==undefined&&!validList(item[key]))throw Error('Monivalinta on virheellinen.');
  validateItem({...item,category:'Muu',color:'Ei määritelty',material:'Ei tiedossa',condition:'Ei arvioitu'});
  for(const key of Object.keys(aliases).filter(k=>k!=='brand'))if(item.inventory?.fields.some(f=>aliases[key].includes(f.header)) && item[key]!==fieldValue(item,key))throw Error(`Kortin ja lähdekentän nykyarvot eroavat: ${key}`);
  return structuredClone(item);
@@ -31,6 +32,13 @@ export function validateRecord(item){
 export function editRecord(before,patch,now=new Date().toISOString(),fieldChanges=[]){
  validateRecord(before);const next=structuredClone(before);let changed=false;
  for(const [key,value] of Object.entries(patch)){
+  if(Object.hasOwn(selectionHeaders,key)){
+   if(!validList(value))throw Error('Monivalinta on virheellinen.');
+   if(JSON.stringify(next[key])===JSON.stringify(value))continue;
+   next[key]=[...value];changed=true;
+   for(const field of sourceFields(next))if(selectionHeaders[key].includes(field.header))field.value=value.join(', ');
+   continue;
+  }
   if(!Object.hasOwn(limits,key) && key!=='image' && key!=='photoKind')throw Error('Tätä tunnistetta tai lähdetietoa ei saa muuttaa.');
   if(next[key]===value)continue;changed=true;next[key]=value;
   const field=sourceFields(next).find(f=>aliases[key]?.includes(f.header));if(field)field.value=value;
@@ -50,13 +58,15 @@ export function editRecord(before,patch,now=new Date().toISOString(),fieldChange
 export function restoreArchived(item,now){return editRecord(item,{state:item.previousState && item.previousState!=='Poistettu'?item.previousState:'Käytössä'},now);}
 export function matches(item,{query='',group='',category='',archive=false}={}){
  if((item.state==='Poistettu')!==archive || group && item.group!==group || category && item.category!==category)return false;
- const text=[item.name,item.group,item.category,item.color,item.material,item.condition,item.state,item.storage,item.notes,item.inventory?.locked.excelId,item.brand,...sourceFields(item).map(f=>scalar(f.value))].join(' ').toLocaleLowerCase('fi');
+ const text=[item.name,item.group,item.category,item.color,item.material,item.condition,item.state,item.storage,item.notes,item.inventory?.locked.excelId,item.brand,...(item.purposes??[]),...(item.seasons??[]),...sourceFields(item).map(f=>scalar(f.value))].join(' ').toLocaleLowerCase('fi');
  return text.includes(query.toLocaleLowerCase('fi'));
 }
 export function recordSignature(items){return JSON.stringify(items.map(i=>[i.id,i.revision,i.updatedAt]).sort((a,b)=>a[0].localeCompare(b[0])));}
 export function readSnapshot(text){
  const data=JSON.parse(text);
- if(data?.format!=='oma-vaatekaappi' || data.version!==3 || typeof data.collectionId!=='string' || !data.collectionId || !Array.isArray(data.items) || data.items.length>2000)throw Error('Tarvitaan tämän puhelinversion varmuuskopio (versio 3). Vanha kokoelma valmistellaan ensin erillisenä kopiona.');
+ if(data?.format!=='oma-vaatekaappi' || ![3,4].includes(data.version) || typeof data.collectionId!=='string' || !data.collectionId || !Array.isArray(data.items) || data.items.length>2000)throw Error('Tarvitaan tämän puhelinversion varmuuskopio (versio 3 tai 4). Vanha kokoelma valmistellaan ensin erillisenä kopiona.');
+ if(data.version===4&&!data.settings)throw Error('Varmuuskopiosta puuttuvat asetukset.');
+ if(data.settings!==undefined)validateSettings(data.settings);
  const items=data.items.map(validateRecord),keys=items.map(i=>i.id);
  if(new Set(keys).size!==keys.length)throw Error('Varmuuskopiossa on päällekkäisiä tunnisteita.');
  for(const key of ['excel','user']){
@@ -65,3 +75,16 @@ export function readSnapshot(text){
  }
  return {...data,items};
 }
+
+export const seasons=['Kevät','Kesä','Syksy','Talvi'];
+export const colorOptions=['Musta','Tummanharmaa','Harmaa','Vaaleanharmaa','Valkoinen','Luonnonvalkoinen','Beige','Ruskea','Tummansininen','Sininen','Vaaleansininen','Vihreä','Tummanvihreä','Punainen','Viininpunainen','Vaaleanpunainen','Pinkki','Keltainen','Violetti','Oranssi','Monivärinen'];
+export const selectionHeaders={purposes:['Käyttötarkoitus','Käyttötarkoitus (pilkuin)'],seasons:['Vuodenaika(t)']};
+export function selections(item,key){
+ if(Array.isArray(item[key]))return [...item[key]];
+ const values=sourceFields(item).filter(f=>selectionHeaders[key].includes(f.header)).flatMap(f=>String(f.value??'').split(/[,;\n]/)).map(s=>s.trim()).filter(Boolean);
+ return [...new Set(values.map(v=>key==='seasons'?(seasons.find(s=>s.toLocaleLowerCase('fi')===v.toLocaleLowerCase('fi'))??v):v))];
+}
+function validList(values){return Array.isArray(values)&&values.length<=200&&new Set(values).size===values.length&&values.every(v=>typeof v==='string'&&v.trim()&&v.length<=200);}
+export function defaultSettings(items=[]){return {version:1,revision:0,storageLocations:[...new Set(['Vaatekaappi','Vaatehuone','Varasto',...items.map(i=>i.storage).filter(Boolean)])],purposes:[...new Set(['Siisti arki','Vapaa-aika','Työ','Juhla','Ulkoilu',...items.flatMap(i=>selections(i,'purposes'))])]};}
+export function validateSettings(settings){if(!settings||settings.version!==1||!Number.isInteger(settings.revision)||settings.revision<0||!validList(settings.storageLocations)||!validList(settings.purposes))throw Error('Valintalistojen asetukset ovat virheellisiä.');return {version:1,revision:settings.revision,storageLocations:[...settings.storageLocations],purposes:[...settings.purposes]};}
+export function collectionSignature(items,settings){return JSON.stringify([recordSignature(items),settings??defaultSettings(items)]);}
