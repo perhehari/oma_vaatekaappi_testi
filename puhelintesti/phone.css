@@ -1,28 +1,19 @@
 .notice{padding:14px;background:#e8eddf;border-radius:10px}.tabs{display:flex;gap:12px;margin-top:20px}.tabs [aria-pressed=true]{background:#344d43;color:#faf9f5}.filters{grid-template-columns:2fr 1fr 1fr}#phone-editor table{width:100%;border-collapse:collapse;font-size:.85rem}#phone-editor th,#phone-editor td{border-bottom:1px solid #d8dece;text-align:left;padding:10px 5px;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere}#phone-editor th{width:40%}details{margin:20px 0}summary{cursor:pointer;font-weight:600;padding:10px 0}#edit-error{color:#9c4337}#backup-ack{display:inline-block;width:auto;margin-right:8px}.backup label{margin:18px 0}.photo img{object-fit:contain}button,input,select,textarea{min-height:44px}.grid .card img{object-fit:contain}.card p{overflow-wrap:anywhere}@media(max-width:600px){.filters{grid-template-columns:1fr}.tabs button{flex:1;padding:12px 8px}.backup>button{width:100%}.fields{grid-template-columns:1fr}#phone-editor{padding:18px}h1{font-size:2.8rem}}
-.grid .card{
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-start;
-  align-items:stretch;
-  min-width:0;
-  white-space:normal;
-  overflow-wrap:anywhere;
-}
-.grid .card>img{
-  display:block;
-  flex:none;
-  width:100%;
-  height:auto;
-  aspect-ratio:4/5;
-  object-fit:contain;
-  object-position:center;
-}
-.grid .card>div{
-  width:100%;
-  min-width:0;
-}
-.grid .card h3,
-.grid .card p{
-  white-space:normal;
-  overflow-wrap:anywhere;
-}
+
+/* Puhelimen kortit: pitkät nimet rivittyvät ja kuvat alkavat samalta korkeudelta. */
+.grid .card{display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;min-width:0;white-space:normal;overflow-wrap:anywhere}
+.grid .card>img{display:block;flex:none;width:100%;height:auto;aspect-ratio:4/5;object-fit:contain;object-position:center}
+.grid .card>div{width:100%;min-width:0}
+.grid .card h3,.grid .card p{white-space:normal;overflow-wrap:anywhere}
+
+/* Ryhmäkohtainen selailu ja aina saatavilla olevat päätoiminnot. */
+.browse-tools{position:sticky;top:0;z-index:5;background:#faf9f5;padding:12px 0;border-bottom:1px solid #d8dece}
+.browse-actions{display:flex;flex-wrap:wrap;gap:8px}
+#group-shortcuts{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px}
+#group-shortcuts button{flex:none;white-space:nowrap}
+#group-shortcuts [aria-pressed=true]{background:#344d43;color:#faf9f5}
+.browse-tools .filters{margin:12px 0 0}
+#search-scope{font-size:.85rem;margin:8px 0 0}
+#visible-count{scroll-margin-top:350px}
+#backup-panel{margin:0 0 16px}
+@media(max-width:600px){.browse-tools .toolbar{flex-direction:row;align-items:center;flex-wrap:wrap}.browse-tools .toolbar h2{margin:0}.browse-actions{width:100%}.browse-tools .toolbar button{width:auto;flex:1;padding:10px}.browse-tools .tabs{margin-top:10px}.browse-tools .filters{grid-template-columns:1fr 1fr;gap:8px}.browse-tools .filters>label:first-child{grid-column:1/-1}.browse-tools input,.browse-tools select{padding:8px}.browse-tools #group-shortcuts button{padding:8px 12px}}
