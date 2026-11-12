@@ -64,20 +64,17 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
 .trip-picker-controls{position:sticky;top:0;background:#faf9f5;padding:8px 0;z-index:1}.trip-choices{margin:12px 0}#trip-add-confirm{position:sticky;bottom:0;width:100%;margin-top:16px}#trip-add-error,#trip-form-error{color:#9c4337}#trip-form label,#trip-add-body>label{margin-top:14px}#trip-picker{min-width:0;max-width:100%}
 @media(max-width:360px){.trip-heading{align-items:stretch;flex-direction:column}.trip-buttons button{flex:1}}
 
-/* Matkojen aloitussivu ja aina näkyvät pakkausvalinnan alatyypit. */
+/* Matkan otsikko ja vaatevalinnan näkymä. */
 .trip-open-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .trip-open-header h2{margin:0;overflow-wrap:anywhere;min-width:0}
 .trip-open-header button{flex:none;padding:8px 12px}
 #trip-add-dialog[open]{display:flex;flex-direction:column;overflow:hidden;height:min(92dvh,800px)}
-#trip-add-dialog>.dialog-head,#trip-add-error,#trip-subtypes,#trip-add-confirm{flex:none}
+#trip-add-dialog>.dialog-head,#trip-add-error,#trip-add-confirm{flex:none}
 #trip-add-dialog>.dialog-head{gap:12px}
 #trip-add-dialog .dialog-head h2{font-size:1.1rem}
 #trip-add-body{overflow:auto;min-height:0;flex:1}
 #trip-add-confirm{position:static;margin-top:8px}
 #trip-add-error{margin:0;font-size:.85rem}
-#trip-subtypes{display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;border-top:1px solid #d8dece}
-#trip-subtypes button{flex:none;padding:8px 12px;white-space:nowrap}
-#trip-subtypes [aria-pressed=true]{background:#344d43;color:#faf9f5}
 .trip-picker-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 #trip-clothes-search{grid-column:1/-1;margin:0}
 #trip-clothes-group{min-width:0;margin:0}
@@ -95,3 +92,6 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
 
 .trip-icon-actions{display:flex;gap:8px;margin:8px 0 12px}
 .trip-icon-actions button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;flex:none}
+
+#trip-search-panel{grid-column:1/-1;display:grid;gap:10px}
+#trip-search-panel select,#trip-search-panel input{width:100%;min-width:0}
