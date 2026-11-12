@@ -7,7 +7,7 @@ export const actionOptions=['Pestävä','Silitettävä','Korjattava','Myytävä'
 export function garmentActions(item){
  if(Array.isArray(item.actions))return [...item.actions];
  const state=item.state==='Poistettu'?item.previousState:item.state;
- const legacy={Myyntiin:'Myytävä',Myynnissä:'Myytävä',Myytävä:'Myytävä',Korjattava:'Korjattava',Lahjoitukseen:'Lahjoitukseen',Säilytetään:'Säilytyksessä','Säilytetään toistaiseksi':'Säilytyksessä',Säilytyksessä:'Säilytyksessä',Kierrätykseen:'Kierrätykseen (aiempi merkintä)'};
+  const legacy={Myyntiin:'Myytävä',Myynnissä:'Myytävä',Myytävä:'Myytävä',Korjattava:'Korjattava',Lahjoitukseen:'Lahjoitukseen',Kierrätykseen:'Kierrätykseen (aiempi merkintä)'};
  return legacy[state]?[legacy[state]]:[];
 }
 export const lockedHeaders=['ID','Kuva-ID','Kuva-ID / tiedostonimi'];
