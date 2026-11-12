@@ -1,4 +1,4 @@
-import {setupTrips} from './trip-ui.js?v=5';
+import {setupTrips} from './trip-ui.js?v=6';
 import {groups,sportsTypes,states,purchaseHeaders,purchaseValue,dateInputValue,validatePurchase,seasons,colorOptions,selections,selectionHeaders,defaultSettings,validateSettings,collectionSignature,fieldValue,sourceFields,lockedHeaders,detailHeaders,validateRecord,editRecord,restoreArchived,matches,readSnapshot} from './phone-model.js?v=5';
 import {openPhoneStore,readCollection,saveRecord,saveSettings,makeSnapshot,restoreSnapshot} from './phone-store.js?v=5';
 const defaultTypes={'Paidat':['T-paita','Paita','Toppi','Pusero','Kauluspaita','Hihaton pusero','Tunika'],'Housut':['Housut','Farkut','Leggingsit','Shortsit'],'Neuletakit ja puserot':['Neule','Neuletakki','Pusero','Collegepaita','Huppari'],'Mekot ja hameet':['Mekko','Hame','Shortsihame'],'Jakut':['Bleiseri','Jakku'],'Takit':['Takki','Sadetakki','Liivi','Toppaliivi'],'Sukat ja sukkahousut':['Sukat','Sukkahousut'],'Alusvaatteet':['Alushousut','Rintaliivit','Aluspaita'],'Yö- ja kylpyvaatteet':['Yöpaita','Yöasu','Pyjama','Kylpytakki'],'Kengät':['Kengät','Lenkkarit','Saappaat / nilkkurit','Sandaalit']};
