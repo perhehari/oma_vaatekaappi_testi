@@ -24,11 +24,37 @@ function render(){
  $('visible-count').textContent=`${[$('group-filter').value||'Kaikki', $('type-filter').value].filter(Boolean).join(' · ')} · ${found.length} ${archived?'arkistoitua vaatetta':'vaatetta'}`;
  $('view-title').textContent=archived?'Arkisto':'Vaatekaappi';$('active').hidden=!archived;
  $('active').setAttribute('aria-pressed',String(!archived));$('archive').setAttribute('aria-pressed',String(archived));$('cards').replaceChildren();
- for(const item of found){const card=document.createElement('button');card.className='card';card.dataset.id=item.id;card.setAttribute('aria-label',`Avaa: ${item.name}`);const photo=document.createElement('img');photo.src=item.image;photo.alt=item.name;photo.loading='lazy';const body=document.createElement('div'),title=document.createElement('h3'),details=document.createElement('p');title.textContent=item.name;details.textContent=[item.category,item.color,fieldValue(item,'brand')].filter(Boolean).join(' · ');body.append(title,details);card.append(photo,body);card.onclick=()=>openEditor(item);$('cards').append(card);}
+ for(const item of found){const card=document.createElement('button');card.className='card';card.dataset.id=item.id;card.setAttribute('aria-label',`Avaa: ${item.name}`);const photo=document.createElement('img');photo.src=item.image;photo.alt=item.name;photo.loading='lazy';const body=document.createElement('div'),title=document.createElement('h3'),details=document.createElement('p');title.textContent=item.name;details.textContent=[item.category,item.color,fieldValue(item,'brand')].filter(Boolean).join(' · ');body.append(title,details);card.append(photo,body);card.onclick=()=>openGarmentView(item);$('cards').append(card);}
  if(!found.length){const empty=document.createElement('p');empty.className='empty';empty.textContent=items.length?'Ei hakutuloksia tässä näkymässä.':'Lisää ensimmäinen vaate ＋-painikkeella tai palauta varmuuskopio Asetuksista.';$('cards').append(empty);}
 }
 async function refresh(){const data=await readCollection(db);items=data.items;collectionId=data.collectionId;savedSettings=data.settings;settings=validateSettings(data.settings??defaultSettings(items));options('group-filter',[...groups,...items.map(i=>i.group)],true);if(!groupInitialized){$('group-filter').value='Paidat';groupInitialized=true;}typeOptions();render();$('new').disabled=!collectionId;}
-const detailGroupDefs=[['🏷️ Käyttö',null],['👕 Vaatteen ominaisuudet',/koko|malli|kuosi|materiaali/i],['🧺 Huolto-ohjeet',/pesu|kuivaus|silitys|hoito/i],['🛍️ Ostostiedot',/osto|hankinta|hinta/i]];
+const detailGroupDefs=[['🏷️ Käyttö',null],['👕 Vaatteen ominaisuudet',/koko|malli|kuosi|materiaali|asusteen kuvaus/i],['🧺 Huolto-ohjeet',/pesu|kuivaus|silitys|hoito/i],['🛍️ Ostostiedot',/osto|hankinta|hinta/i]];
+let viewedId=null,viewEditing=false,listScroll=0;
+function viewRow(container,label,value){
+ if(value===null||value===undefined||String(value).trim()==='')return;
+ const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=String(value);container.append(dt,dd);
+}
+function openGarmentView(item,returning=false){
+ if(!returning)listScroll=window.scrollY;viewedId=item.id;
+ $('garment-view-title').textContent=item.name;$('garment-view-image').src=item.image;$('garment-view-image').alt=item.name;
+ const basic=$('garment-view-basics');basic.replaceChildren();for(const [label,value] of [['Merkki',fieldValue(item,'brand')],['Pääväri',item.color],['Säilytyspaikka',item.storage],['Huomiot',item.notes]])viewRow(basic,label,value);
+ const sections=detailGroupDefs.map(([title])=>{const section=document.createElement('details'),summary=document.createElement('summary'),list=document.createElement('dl');summary.textContent=title;section.append(summary,list);return {section,list};});
+ const seen=new Set();function add(index,label,value){if(seen.has(label))return;seen.add(label);viewRow(sections[index].list,label,value);}
+ add(0,'Käyttötarkoitukset',selections(item,'purposes').join(', '));add(0,'Vuodenajat',selections(item,'seasons').join(', '));add(0,'Tila',item.state);
+ add(1,'Vaateryhmä',item.group);add(1,'Vaatetyyppi',item.category);add(1,'Kunto',item.condition);add(1,'Materiaali',item.material);
+ add(3,'Ostovuosi',purchaseValue(item,'purchaseYear'));add(3,'Ostopäivämäärä',purchaseValue(item,'purchaseDate'));
+ for(const field of sourceFields(item)){
+  if(lockedHeaders.includes(field.header)||primaryHeaders.includes(field.header)||field.header==='Pesuohjeen lähde')continue;
+  const index=detailGroupDefs.findIndex(([,pattern])=>pattern&&pattern.test(field.header??''));add(index<0?0:index,field.header||'Muu tieto',field.value);
+ }
+ $('garment-view-details').replaceChildren(...sections.filter(({list})=>list.childElementCount).map(({section})=>section));
+ $('garment-view').showModal();$('garment-view').scrollTop=0;
+}
+function returnToList(){const id=viewedId;viewedId=null;requestAnimationFrame(()=>{[...$('cards').querySelectorAll('.card')].find(card=>card.dataset.id===id)?.focus({preventScroll:true});window.scrollTo(0,listScroll);});}
+$('garment-view-close').onclick=()=>$('garment-view').close();
+$('garment-view').onclose=()=>{if(!viewEditing)returnToList();};
+$('garment-view-edit').onclick=()=>{const item=items.find(i=>i.id===viewedId);if(!item)return;viewEditing=true;$('garment-view').close();openEditor(item);};
+$('phone-editor').onclose=()=>{if(!viewEditing)return;const item=items.find(i=>i.id===viewedId);viewEditing=false;if(item)openGarmentView(item,true);else returnToList();};
 let editingFields=[];
 const primaryHeaders=['Tunnistenimi','Merkki','Alaryhmä / tyyppi','Alaryhmä/tyyppi','Pääväri','Kunto','Tila','Säilytyspaikka','Huomiot',...selectionHeaders.purposes,...selectionHeaders.seasons,...purchaseHeaders.purchaseYear,...purchaseHeaders.purchaseDate];
 function showDetailGroups(item){
