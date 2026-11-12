@@ -95,3 +95,22 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
 
 #trip-search-panel{grid-column:1/-1;display:grid;gap:10px}
 #trip-search-panel select,#trip-search-panel input{width:100%;min-width:0}
+
+/* Tietokortti ja muokkauksen yhtenäiset kenttävälit. */
+.view-actions{display:flex;gap:8px;align-items:center;flex:none}
+#garment-view .dialog-head{align-items:flex-start;gap:12px}
+#garment-view-title{overflow-wrap:anywhere;min-width:0}
+#garment-view-edit{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0}
+#garment-view dl{margin:16px 0;display:grid;gap:6px}
+#garment-view dt{font-weight:600;font-size:.85rem;margin-top:10px}
+#garment-view dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+#garment-view .photo img{object-fit:contain}
+#garment-view details{margin:16px 0}
+#phone-form>label,#phone-form .fields>label,#detail-groups details>label,#purchase-fields>label{display:grid;gap:6px;margin:0}
+#phone-form>label,#phone-form>.fields,#phone-form>h3,#phone-form>.actions{margin-top:16px}
+#phone-form .fields{gap:16px;margin-bottom:0}
+#phone-form label>input,#phone-form label>select,#phone-form label>textarea{margin-top:0}
+#detail-groups details>label,#purchase-fields>label{margin-top:16px}
+#detail-groups details{margin:16px 0}
+#usage-fields fieldset{margin:16px 0;padding:12px}
+#purchase-hint:empty,#edit-error:empty{display:none}
