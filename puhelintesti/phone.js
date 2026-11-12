@@ -1,4 +1,4 @@
-import {setupTrips} from './trip-ui.js?v=6';
+import {setupTrips} from './trip-ui.js?v=7';
 import {groups,sportsTypes,states,purchaseHeaders,purchaseValue,dateInputValue,validatePurchase,seasons,colorOptions,selections,selectionHeaders,defaultSettings,validateSettings,collectionSignature,fieldValue,sourceFields,lockedHeaders,detailHeaders,validateRecord,editRecord,restoreArchived,matches,readSnapshot} from './phone-model.js?v=5';
 import {openPhoneStore,readCollection,saveRecord,saveSettings,makeSnapshot,restoreSnapshot} from './phone-store.js?v=5';
 const defaultTypes={'Paidat':['T-paita','Paita','Toppi','Pusero','Kauluspaita','Hihaton pusero','Tunika'],'Housut':['Housut','Farkut','Leggingsit','Shortsit'],'Neuletakit ja puserot':['Neule','Neuletakki','Pusero','Collegepaita','Huppari'],'Mekot ja hameet':['Mekko','Hame','Shortsihame'],'Jakut':['Bleiseri','Jakku'],'Takit':['Takki','Sadetakki','Liivi','Toppaliivi'],'Sukat ja sukkahousut':['Sukat','Sukkahousut'],'Alusvaatteet':['Alushousut','Rintaliivit','Aluspaita'],'Yö- ja kylpyvaatteet':['Yöpaita','Yöasu','Pyjama','Kylpytakki'],'Kengät':['Kengät','Lenkkarit','Saappaat / nilkkurit','Sandaalit']};
@@ -13,15 +13,15 @@ function options(id,values,all=false){const select=$(id),old=select.value;select
 function typeOptions(){options('type-filter',items.filter(i=>!$('group-filter').value||i.group===$('group-filter').value).map(i=>i.category),true);}
 function editTypeOptions(){const group=$('edit-group').value;dropdown('edit-type',[...(group==='Urheiluvaatteet'?sportsTypes:defaultTypes[group]??['Muu']),...items.filter(i=>i.group===group).map(i=>i.category)],current&&current.group===group?current.category:'');}
 function chooseGroup(group){
- $('query').value='';$('group-filter').value=group;$('type-filter').value='';typeOptions();render();
+ $('group-filter').value=group;$('type-filter').value='';typeOptions();render();
  $('visible-count').scrollIntoView({block:'start'});
 }
 function render(){
  $('total').textContent=`${items.length} vaatetta`;
- const query=$('query').value.trim(),searching=Boolean(query);
- $('search-scope').hidden=!searching;$('group-filter').disabled=searching;$('type-filter').disabled=searching;
- const found=items.filter(i=>matches(i,{query,group:searching?'':$('group-filter').value,category:searching?'':$('type-filter').value,archive:archived})).sort((a,b)=>a.group.localeCompare(b.group,'fi')||a.category.localeCompare(b.category,'fi')||a.name.localeCompare(b.name,'fi')||a.id.localeCompare(b.id));
- $('visible-count').textContent=`${searching?'Hakutulokset kaikista vaateryhmistä':$('group-filter').value||'Kaikki vaateryhmät'} · ${found.length} ${archived?'arkistoitua vaatetta':'vaatetta'}`;
+ const query=$('query').value.trim();
+ $('search-scope').hidden=true;$('group-filter').disabled=false;$('type-filter').disabled=false;
+ const found=items.filter(i=>matches(i,{query,group:$('group-filter').value,category:$('type-filter').value,archive:archived})).sort((a,b)=>a.group.localeCompare(b.group,'fi')||a.category.localeCompare(b.category,'fi')||a.name.localeCompare(b.name,'fi')||a.id.localeCompare(b.id));
+ $('visible-count').textContent=`${[$('group-filter').value||'Kaikki', $('type-filter').value].filter(Boolean).join(' · ')} · ${found.length} ${archived?'arkistoitua vaatetta':'vaatetta'}`;
  $('view-title').textContent=archived?'Arkisto':'Vaatekaappi';$('active').hidden=!archived;
  $('active').setAttribute('aria-pressed',String(!archived));$('archive').setAttribute('aria-pressed',String(archived));$('cards').replaceChildren();
  for(const item of found){const card=document.createElement('button');card.className='card';card.dataset.id=item.id;card.setAttribute('aria-label',`Avaa: ${item.name}`);const photo=document.createElement('img');photo.src=item.image;photo.alt=item.name;photo.loading='lazy';const body=document.createElement('div'),title=document.createElement('h3'),details=document.createElement('p');title.textContent=item.name;details.textContent=[item.category,item.color,fieldValue(item,'brand')].filter(Boolean).join(' · ');body.append(title,details);card.append(photo,body);card.onclick=()=>openEditor(item);$('cards').append(card);}
