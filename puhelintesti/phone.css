@@ -114,3 +114,18 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
 #detail-groups details{margin:16px 0}
 #usage-fields fieldset{margin:16px 0;padding:12px}
 #purchase-hint:empty,#edit-error:empty{display:none}
+
+/* Tietokortin nimi kuvan alla, matkan valintalistalla erillinen tietopainike. */
+#garment-view .dialog-head{justify-content:flex-end}
+#garment-view-title{margin:16px 0 8px;overflow-wrap:normal;word-break:normal;hyphens:auto}
+.trip-garment-name{border:0;background:transparent;color:#263e34;text-align:left;padding:4px 0;min-width:0;flex:1;font-size:.9rem;line-height:1.4;white-space:normal;overflow-wrap:anywhere;text-decoration:underline;text-underline-offset:3px}
+#trip-add-body button.trip-garment-name{color:#263e34}
+
+/* Toimet: pienet katselukortit ja erillinen yhden merkinnän kuittaus. */
+.action-row{display:flex;align-items:flex-start;gap:12px;padding:12px;margin:8px 0;border:1px solid #e0e3da;border-radius:10px;background:white}
+.action-row>img{width:48px;height:60px;object-fit:contain;flex:none}
+.action-info{min-width:0;flex:1}.action-info p{font-size:.8rem;margin:4px 0;overflow-wrap:anywhere}
+#actions-items .action-name{border:0;background:transparent;color:#263e34;text-align:left;padding:0;white-space:normal;overflow-wrap:anywhere;font-weight:600}
+.action-chips{display:flex;gap:8px;flex-wrap:wrap}.action-chips button{padding:8px;font-size:.8rem}
+#actions-message:empty{display:none}
+.bottom-nav{gap:6px;padding-left:10px;padding-right:10px}.bottom-nav button{min-width:0;padding:10px 8px}
