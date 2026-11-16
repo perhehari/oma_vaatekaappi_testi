@@ -1,5 +1,5 @@
-import {validateTrip,validateTrips} from './trip-model.js?v=10';
-import {validateRecord,readSnapshot,collectionSignature,defaultSettings,validateSettings} from './phone-model.js?v=10';
+import {validateTrip,validateTrips} from './trip-model.js?v=12';
+import {validateRecord,readSnapshot,collectionSignature,defaultSettings,validateSettings} from './phone-model.js?v=13';
 export const testDatabase='oma-vaatekaappi-puhelin-testi-v1';
 export function openPhoneStore(name=testDatabase){return new Promise((resolve,reject)=>{const request=indexedDB.open(name,1);request.onupgradeneeded=()=>{request.result.createObjectStore('items',{keyPath:'id'});request.result.createObjectStore('meta');};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);request.onblocked=()=>reject(Error('Sulje sovelluksen muut välilehdet.'));});}
 export function readCollection(db){return new Promise((resolve,reject)=>{const tx=db.transaction(['items','meta'],'readonly');const items=tx.objectStore('items').getAll(),id=tx.objectStore('meta').get('collectionId'),settings=tx.objectStore('meta').get('settings'),trips=tx.objectStore('meta').get('trips');tx.oncomplete=()=>resolve({items:items.result,collectionId:id.result??null,settings:settings.result??null,trips:trips.result??[]});tx.onerror=()=>reject(tx.error);});}
@@ -25,13 +25,14 @@ export async function makeSnapshot(db){
  if(!data.collectionId)throw Error('Kokoelmaa ei ole vielä alustettu.');
  return {format:'oma-vaatekaappi',version:5,trips:validateTrips(data.trips),settings:validateSettings(data.settings??defaultSettings(data.items)),collectionId:data.collectionId,exportedAt:new Date().toISOString(),items:data.items.map(validateRecord)};
 }
-export function restoreSnapshot(db,raw,{backupToken=null,confirmed=false}={}){
+export function restoreSnapshot(db,raw,{expectedSignature=null,confirmed=false}={}){
  const snapshot=readSnapshot(typeof raw==='string'?raw:JSON.stringify(raw));
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(['items','meta'],'readwrite'),store=tx.objectStore('items');let failure;
   const req=store.getAll(),settingsReq=tx.objectStore('meta').get('settings'),tripsReq=tx.objectStore('meta').get('trips');
   tripsReq.onsuccess=()=>{try{
-   if((req.result.length||(tripsReq.result??[]).length) && (!confirmed || backupToken!==collectionSignature(req.result,settingsReq.result??null,tripsReq.result??[])))throw Error('Vie nykyisestä kokoelmasta uusi varmuuskopio ja vahvista palautus.');
+    const currentSettings=settingsReq.result??null,currentTrips=tripsReq.result??[],hasExisting=req.result.length||currentTrips.length||currentSettings;
+    if(hasExisting && (!confirmed || expectedSignature!==collectionSignature(req.result,currentSettings,currentTrips)))throw Error('Testikokoelma muuttui tai korvausta ei ole vahvistettu. Valitse tiedosto uudelleen ja vahvista palautus.');
    store.clear();
    for(const item of snapshot.items)store.add(item);
    tx.objectStore('meta').put(snapshot.collectionId,'collectionId');
